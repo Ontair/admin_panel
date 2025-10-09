@@ -1,0 +1,33 @@
+server:
+  host: "localhost"
+  port: "8080"
+  environment: "development"
+  read_timeout: 30
+  write_timeout: 30
+
+database:
+  host: "localhost"
+  port: 5432
+  username: "postgres"
+  password: "password"
+  name: "admin_panel"
+  sslmode: "disable"
+
+jwt:
+  secret_key: "your-super-secret-key-change-this-in-production"
+  refresh_secret: "your-super-refresh-secret-change-this-in-production"
+  access_expiry: 15  # minutes
+  refresh_expiry: 1440  # minutes (24 hours)
+
+cookie:
+  domain: ""  # empty for localhost, set to your domain in production
+  secure: false  # true for HTTPS in production
+  same_site: "Lax"  # Lax, Strict, or None
+  path: "/"
+  access_expiry: 15  # minutes
+  refresh_expiry: 1440  # minutes (24 hours)
+
+logging:
+  level: "info"
+  format: "json"
+  file: ""
