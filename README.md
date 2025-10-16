@@ -2,6 +2,58 @@
 
 Admin Panel - это веб-приложение для управления пользователями, построенное с использованием Hexagonal Architecture (Ports & Adapters).
 
+## Быстрый старт
+
+### Локальная разработка
+
+1. **Запуск с Docker Compose (рекомендуется):**
+   ```bash
+   # Простой запуск
+   docker-compose up -d
+   
+   # С Nginx (для production-like окружения)
+   docker-compose -f docker-compose.nginx.yml up -d
+   
+   # С Traefik (для production с автоматическим SSL)
+   docker-compose -f docker-compose.traefik.yml up -d
+   ```
+
+2. **Ручной запуск:**
+   ```bash
+   # Установка зависимостей
+   go mod download
+   
+   # Запуск PostgreSQL (если не используется Docker)
+   # Настройте config.yaml с параметрами БД
+   
+   # Запуск приложения
+   go run cmd/main.go
+   ```
+
+### Переменные окружения
+
+Приложение использует `config.yaml` для конфигурации. Для Docker можно переопределить через переменные окружения:
+
+- `DB_HOST` - хост базы данных (по умолчанию: localhost)
+- `DB_PORT` - порт базы данных (по умолчанию: 5432)
+- `DB_USER` - пользователь БД (по умолчанию: postgres)
+- `DB_PASSWORD` - пароль БД (по умолчанию: password)
+- `DB_NAME` - имя БД (по умолчанию: admin_panel)
+
+### API Endpoints
+
+После запуска API доступно на `http://localhost:8080`:
+
+- **Health Check:** `GET /health`
+- **Auth:** `POST /api/v1/auth/login`, `POST /api/v1/auth/logout`, `POST /api/v1/auth/refresh`
+- **Users:** `GET /api/v1/users/profile`, `POST /api/v1/users/change-password`
+- **Manager Routes:** `GET /api/v1/manager/users`, `POST /api/v1/manager/users`
+- **Admin Routes:** `GET /api/v1/admin/users`, `DELETE /api/v1/admin/users/:id`
+
+### CORS
+
+Backend настроен для работы с frontend на `http://localhost:5173`. Для production измените CORS настройки в `cmd/main.go`.
+
 ## Архитектура
 
 Проект следует принципам Hexagonal Architecture:

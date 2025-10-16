@@ -22,6 +22,7 @@ type DatabaseService struct {
 func NewDatabaseService(cfg *config.Config) (*DatabaseService, error) {
 	// Parse configuration
 	dbURL := cfg.GetPostgresURL()
+	log.Printf("Connecting to database: %s", dbURL)
 
 	// Configure connection pool
 	config, err := pgxpool.ParseConfig(dbURL)
@@ -35,10 +36,26 @@ func NewDatabaseService(cfg *config.Config) (*DatabaseService, error) {
 	config.MaxConnLifetime = time.Hour
 	config.MaxConnIdleTime = time.Minute * 30
 
-	// Connect to database
-	db, err := pgxpool.NewWithConfig(context.Background(), config)
+	// Connect to database with retry logic
+	var db *pgxpool.Pool
+	maxRetries := 3
+	retryDelay := time.Second * 2
+
+	for i := 0; i < maxRetries; i++ {
+		db, err = pgxpool.NewWithConfig(context.Background(), config)
+		if err == nil {
+			break
+		}
+
+		if i < maxRetries-1 {
+			log.Printf("Failed to connect to database (attempt %d/%d): %v. Retrying in %v...", i+1, maxRetries, err, retryDelay)
+			time.Sleep(retryDelay)
+			retryDelay = time.Duration(float64(retryDelay) * 1.5) // Exponential backoff
+		}
+	}
+
 	if err != nil {
-		return nil, fmt.Errorf("failed to connect to database: %w", err)
+		return nil, fmt.Errorf("failed to connect to database after %d attempts: %w", maxRetries, err)
 	}
 
 	service := &DatabaseService{
