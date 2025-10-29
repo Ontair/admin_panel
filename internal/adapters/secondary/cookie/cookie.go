@@ -19,19 +19,33 @@ type CookieService struct {
 }
 
 // NewCookieService creates new cookie service
-func NewCookieService() service.CookieService {
+func NewCookieService(sameSite string, domain string, secure bool) service.CookieService {
+	sameSiteMode := http.SameSiteLaxMode // Default
+	
+	switch sameSite {
+	case "Strict":
+		sameSiteMode = http.SameSiteStrictMode
+	case "Lax":
+		sameSiteMode = http.SameSiteLaxMode
+	case "None":
+		sameSiteMode = http.SameSiteNoneMode
+	}
+	
 	return &CookieService{
 		accessTokenName:  "access_token",
 		refreshTokenName: "refresh_token",
-		domain:           "",    // Use default domain
-		secure:           false, // Set to true in production with HTTPS
+		domain:           domain,
+		secure:           secure,
 		httpOnly:         true,
-		sameSite:         http.SameSiteStrictMode,
+		sameSite:         sameSiteMode,
 	}
 }
 
 // SetAuthCookies sets access and refresh token cookies
 func (s *CookieService) SetAuthCookies(c *gin.Context, accessToken, refreshToken string) {
+	// Set SameSite for all cookies in this context
+	c.SetSameSite(s.sameSite)
+	
 	// Set access token cookie (short-lived)
 	c.SetCookie(
 		s.accessTokenName,
@@ -96,6 +110,9 @@ func (s *CookieService) GetTokenFromRequest(c *gin.Context) (string, error) {
 
 // ClearAuthCookies clears authentication cookies
 func (s *CookieService) ClearAuthCookies(c *gin.Context) {
+	// Set SameSite for all cookies in this context
+	c.SetSameSite(s.sameSite)
+	
 	// Clear access token cookie
 	c.SetCookie(
 		s.accessTokenName,

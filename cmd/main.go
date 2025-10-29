@@ -100,7 +100,7 @@ func initializeDependencies(cfg *config.Config, dbService *database.DatabaseServ
 
 	// Initialize external services
 	jwtService := jwt.NewJWTService(cfg)
-	cookieService := cookie.NewCookieService()
+	cookieService := cookie.NewCookieService(cfg.Cookie.SameSite, cfg.Cookie.Domain, cfg.Cookie.Secure)
 
 	// Initialize use cases
 	authService := services.NewAuthService(userRepository, jwtService)
@@ -124,20 +124,8 @@ func setupRouter(deps *Dependencies, cfg *config.Config, appLogger service.Logge
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
 
-	// CORS middleware
-	router.Use(func(c *gin.Context) {
-		c.Header("Access-Control-Allow-Origin", "http://localhost:5174")
-		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		c.Header("Access-Control-Allow-Headers", "Origin, Content-Type, Accept, Authorization, Cookie")
-		c.Header("Access-Control-Allow-Credentials", "true")
-
-		if c.Request.Method == "OPTIONS" {
-			c.AbortWithStatus(204)
-			return
-		}
-
-		c.Next()
-	})
+	// CORS middleware - handled by Nginx proxy
+	// No CORS headers needed here as Nginx handles them
 
 	// Health check endpoint
 	router.GET("/health", func(c *gin.Context) {
